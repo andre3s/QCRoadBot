@@ -9,12 +9,14 @@ logger = logging.getLogger()
 
 
 def get_timestamp():
+    """Get current timestamp"""
     tmp_datetime_obj = datetime.now()
     datetime_obj = tmp_datetime_obj.strftime('%Y-%m-%d %H:%M:%S')
     return datetime_obj
 
 
 def twitter_connection():
+    """Twitter authentication"""
     auth = tweepy.OAuthHandler(twitter_api_key, twitter_api_secret_key)
     auth.set_access_token(twitter_access_token, twitter_access_token_secret)
     api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
@@ -30,6 +32,7 @@ def twitter_connection():
 
 
 def tweet_sender(message):
+    """Sends tweet message."""
     api = twitter_connection()
     try:
         api.update_status(message)

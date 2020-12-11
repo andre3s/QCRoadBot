@@ -7,7 +7,7 @@ list_roads = []
 
 
 def get_list_roads():
-
+    """Generates list of all highways."""
     global list_roads
 
     regex_roads = r"""(?<=>)([0-9]*)"""
