@@ -21,6 +21,7 @@ df_snow_alert = pd.DataFrame(columns=columns)
 
 
 def create_list_url():
+    """This function will get the list of all highways and generate a list URLs"""
     global list_url
 
     get_list_roads()
@@ -33,6 +34,7 @@ def create_list_url():
 
 
 def get_road_status(url):
+    """Get the situation of the highways. If there's snow and/or ice, this road goes to the list."""
     # Global objects
     global list_url
     global df_road_status_content
@@ -77,6 +79,9 @@ def get_road_status(url):
     tmp_highway_type = 'Autoroute' if tmp_highway_code in list_autoroute else 'Route'
 
     tmp_datetime_obj = datetime_obj
+
+    # Delete all lines from the main dataframe before inserting new lines.
+    df_road_status_content.drop(df_road_status_content.index, inplace=True, axis=0)
 
     while i <= len(list_regular_locations) - 1:
         tmp_from2 = str(soup.find(id='%s' % list_regular_locations[i]))
@@ -144,6 +149,7 @@ def message_sender():
 
 
 def road_status():
+    """Function to trigger the main execution."""
     # Create list of URLs
     create_list_url()
 
