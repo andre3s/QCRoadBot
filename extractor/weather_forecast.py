@@ -1,4 +1,7 @@
 from typing import List, Any, Union
+from extractor.utility import tweet_sender
+from datetime import datetime
+import time
 
 import requests
 import pandas as pd
@@ -24,40 +27,71 @@ columns: List[Union[str, Any]] = ['region', 'summary', 'icon', 'precipIntensity'
                                   'pressure', 'windSpeed', 'uvIndex', 'visibility']
 df_weather_forecast = pd.DataFrame(columns=columns)
 
-i = 0
-while i <= len(list_regions) - 1:
-    url = 'https://api.darksky.net/forecast/d3c545c8bfb1e45bda2dcbc89e94a11a/%s,%s?exclude=minutely,hourly,daily,' \
-          'alerts,flags&units=ca' % (list_regions[i][1], list_regions[i][2])
-    r = requests.get(url)
-    r.json()
 
-    if r.status_code == 200:
-        pass
-    else:
-        print(f"Not able to download weather forecast for {list_regions[i][0]}.")
-        continue
+def weather_forecast():
+    global list_regions
+    global df_weather_forecast
 
-    tmp_region = list_regions[i][0]
-    tmp_summary = r.json()['currently']['summary']
-    tmp_icon = r.json()['currently']['icon']
-    tmp_precipIntensity = r.json()['currently']['precipIntensity']
-    tmp_precipProbability = r.json()['currently']['precipProbability']
+    i = 0
+    while i <= len(list_regions) - 1:
+        url = 'https://api.darksky.net/forecast/d3c545c8bfb1e45bda2dcbc89e94a11a/%s,%s?exclude=minutely,hourly,daily,' \
+              'alerts,flags&units=ca' % (list_regions[i][1], list_regions[i][2])
+        r = requests.get(url)
+        r.json()
 
-    try:
-        tmp_precipType = r.json()['currently']['precipType']
-    except:
-        tmp_precipType = ''
+        if r.status_code == 200:
+            pass
+        else:
+            print(f"Not able to download weather forecast for {list_regions[i][0]}.")
+            continue
 
-    try:
-        tmp_precipAccumulation = r.json()['currently']['precipAccumulation']
-    except:
-        tmp_precipAccumulation = ''
-    tmp_temperature = r.json()['currently']['temperature']
-    tmp_apparentTemperature = r.json()['currently']['apparentTemperature']
-    tmp_humidity = r.json()['currently']['humidity']
-    tmp_pressure = r.json()['currently']['pressure']
-    tmp_windSpeed = r.json()['currently']['windSpeed']
-    tmp_uvIndex = r.json()['currently']['uvIndex']
-    tmp_visibility = r.json()['currently']['visibility']
+        tmp_time = datetime.now()
+        tmp_region = list_regions[i][0]
+        tmp_summary = r.json()['currently']['summary']
+        # tmp_icon = r.json()['currently']['icon']
+        # tmp_precipIntensity = r.json()['currently']['precipIntensity']
+        tmp_precipProbability = r.json()['currently']['precipProbability']
 
-    i += 1
+        try:
+            tmp_precipType = r.json()['currently']['precipType']
+        except:
+            tmp_precipType = ''
+
+        try:
+            tmp_precipAccumulation = r.json()['currently']['precipAccumulation']
+        except:
+            tmp_precipAccumulation = ''
+
+        tmp_temperature = r.json()['currently']['temperature']
+        tmp_apparentTemperature = r.json()['currently']['apparentTemperature']
+        # tmp_humidity = r.json()['currently']['humidity']
+        # tmp_pressure = r.json()['currently']['pressure']
+        tmp_windSpeed = r.json()['currently']['windSpeed']
+        # tmp_uvIndex = r.json()['currently']['uvIndex']
+        tmp_visibility = r.json()['currently']['visibility']
+
+        if tmp_precipProbability >= 0.45:
+            print(f'Sending weather alert for {tmp_region}. Precipitation chance is {tmp_precipProbability*100}%.')
+            message = ('Weather forecast alert' + '\n' + 'Region: ' + '%s' + '\n' + 'Summary: ' + '%s' + '\n'
+                       + 'Precipitation type: ' + '%s' + '\n' + 'Precipitation probability: ' + '%s' + '\n'
+                       + 'Precipitation Accumulation: ' + '%s' + 'cm' + '\n' + 'Temperature: ' + '%s' + '\n'
+                       + 'Apparent Temperature: ' + '%s' + '\n' + 'Wind speed: ' + '%s' + '\n' + 'Visibility: ' + '%s'
+                       + '\n' + 'Updated at: ' + str(tmp_time.strftime('%Y-%m-%d %H:%M:%S')) + '\n'
+                       + 'Powered by Dark Sky: https://darksky.net/dev' + '#drivesafe') % (
+                      tmp_region, tmp_summary, tmp_precipType.capitalize(),
+                      "{0:.0f}%".format(tmp_precipProbability*100),
+                      "{0:.0f}".format(tmp_precipAccumulation), "{0:.0f}°C".format(tmp_temperature),
+                      "{0:.0f}°C".format(tmp_apparentTemperature), "{0:.0f}Km/h".format(tmp_windSpeed),
+                      "{0:.0f}Km".format(tmp_visibility))
+            tweet_sender(message)
+
+        elif tmp_precipProbability < 0.45:
+            print(f'No weather alert needed for {tmp_region}. Precipitation chance is {tmp_precipProbability} .')
+            pass
+
+        time.sleep(10)
+        i += 1
+
+
+if __name__ == '__main__':
+    weather_forecast()
