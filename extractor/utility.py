@@ -39,4 +39,3 @@ def tweet_sender(message):
     except tweepy.TweepError as e:
         logger.error('Not able to tweet the message.', exc_info=True)
         print(e.reason)
-
